@@ -1,0 +1,51 @@
+version: "3.5"
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${APP_NAME}-api
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - ./.env
+    ports:
+      - ${PORT_SERVER}:10000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ${APP_NAME}
+  postgres:
+    image: postgres
+    container_name: ${APP_NAME}-postgres
+    environment:
+      POSTGRES_USER: ${TYPEORM_USERNAME}
+      POSTGRES_PASSWORD: ${TYPEORM_PASSWORD}
+      POSTGRES_DB: ${APP_NAME}
+    ports:
+      - ${TYPEORM_PORT}:5432
+    extra_hosts:
+      - "postgres:host-gateway"
+    volumes:
+      - postgres-db-data:/var/lib/postgres
+    networks:
+      - ${APP_NAME}
+  redis:
+    image: redis
+    container_name: ${APP_NAME}-redis
+    ports:
+      - ${REDIS_PORT}:6379
+    extra_hosts:
+      - "redis:host-gateway"
+    volumes:
+      - redis-data:/var/lib/redis
+    networks:
+      - ${APP_NAME}
+networks:
+  gateway:
+    name: ${APP_NAME}-network
+    driver: bridge
+volumes:
+  postgres-db-data:
+  redis-data:
